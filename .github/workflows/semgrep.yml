@@ -1,10 +1,11 @@
+---
 name: DevSecOps - Semgrep SAST Scan
 
-on:
+"on":
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
   workflow_dispatch:
 
 permissions:
@@ -28,7 +29,7 @@ jobs:
       - name: Instalar Semgrep
         run: python3 -m pip install semgrep
 
-      # Renderiza los templates de Helm si existen en la estructura
+      # Renderiza templates de Helm si existen
       - name: Renderizar Helm para el análisis
         run: |
           mkdir -p .semgrep-tmp
@@ -54,10 +55,14 @@ jobs:
         if: always()
         shell: bash
         run: |
-          test -s semgrep-results.json || printf '{"results":[],"errors":[]}' > semgrep-results.json
-          total=$(jq '.results | length' semgrep-results.json 2>/dev/null || echo 0)
-          errores=$(jq '[.results[] | select(.extra.severity == "ERROR")] | length' semgrep-results.json 2>/dev/null || echo 0)
-          warnings=$(jq '[.results[] | select(.extra.severity == "WARNING")] | length' semgrep-results.json 2>/dev/null || echo 0)
+          test -s semgrep-results.json || \
+            printf '{"results":[],"errors":[]}' > semgrep-results.json
+          total=$(jq '.results | length' \
+            semgrep-results.json 2>/dev/null || echo 0)
+          errores=$(jq '[.results[] | select(.extra.severity == "ERROR")]' \
+            semgrep-results.json 2>/dev/null | jq 'length' || echo 0)
+          warnings=$(jq '[.results[] | select(.extra.severity == "WARNING")]' \
+            semgrep-results.json 2>/dev/null | jq 'length' || echo 0)
           {
             echo "### Reporte de Análisis Estático SAST (Semgrep)"
             echo
@@ -93,7 +98,7 @@ jobs:
         with:
           sarif_file: semgrep.sarif
 
-      # Estrategia Andon Cord: Falla el job si hay vulnerabilidades de severidad ERROR
+      # Estrategia Andon Cord: Falla el job si hay vulnerabilidades ERROR
       - name: Guard estricto de seguridad (Andon Cord)
         run: |
           semgrep scan --config=p/owasp-top-ten \
