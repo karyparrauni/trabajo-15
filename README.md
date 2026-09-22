@@ -1,310 +1,72 @@
-# TP14 — Modelado de Amenazas con Threagile
+# Portfolio DevSecOps: Scripts Automatizados, Infraestructura y Seguridad CI/CD
 
-## 1. Introducción
+[![DevSecOps - Semgrep SAST Scan](https://github.com/karyparrauni/trabajo-15/actions/workflows/semgrep.yml/badge.svg)](https://github.com/karyparrauni/trabajo-15/actions)
 
-Este trabajo práctico implementa **modelado de amenazas** sobre la arquitectura de la **Notes App**, integrando la herramienta **Threagile** dentro del pipeline de CI/CD.
+## 📌 Visión General del Portfolio (TP01 a TP15)
+Este repositorio centraliza y consolida el recorrido práctico completo de la materia, abarcando desde la administración base en sistemas Linux y la automatización mediante scripting, hasta la orquestación en la nube y la integración de la cadena completa de **DevSecOps** en pipelines de CI/CD.
 
-El objetivo es incorporar una práctica de **DevSecOps**, de manera que los cambios realizados sobre la arquitectura puedan ser analizados automáticamente y se generen reportes de seguridad como parte del proceso de integración continua.
-
-El trabajo se desarrolla sobre la aplicación y la infraestructura construida durante los trabajos prácticos anteriores.
-
----
-
-## 2. Objetivos
-
-Los principales objetivos del TP14 son:
-
-* Incorporar modelado de amenazas a la aplicación.
-* Representar los componentes principales de la arquitectura mediante Threagile.
-* Identificar activos técnicos y flujos de datos.
-* Integrar el análisis de amenazas al pipeline de GitHub Actions.
-* Ejecutar y validar el modelo localmente.
-* Ejecutar automáticamente el análisis en GitHub Actions.
-* Generar reportes de seguridad como artefactos del pipeline.
-* Incorporar el análisis de seguridad como parte del proceso DevSecOps.
+| Bloque Temático | Trabajos Prácticos | Tecnologías y Conceptos Clave |
+|---|---|---|
+| **Fundamentos de Operaciones** | **TP01 – TP04** | Scripting automatizado en Bash, principio de menor privilegio (`devops-deploy`), flujo de trabajo colaborativo Gitflow y diagnóstico de conectividad de red en formato YAML. |
+| **Contenerización y Redes** | **TP05 – TP06** | Empaquetado en Docker (Flask API), optimización por capas, usuarios no-root y orquestación multicapa con Docker Compose (Nginx, Flask, PostgreSQL). |
+| **CI/CD y Observabilidad** | **TP07 – TP08** | Pipelines automatizados en GitHub Actions, pruebas locales con `act`, instrumentación de métricas con Prometheus y tableros en Grafana. |
+| **Orquestación en Kubernetes** | **TP09 – TP10** | Administración declarativa en K8s (Pods, Secrets, PVC), enrutamiento con Ingress Controllers y parametrización mediante Charts personalizados en Helm. |
+| **Infraestructura como Código** | **TP11 – TP12** | Aprovisionamiento modular de infraestructura con Terraform y consolidación del portfolio unificado en un ecosistema integrable. |
+| **Cadena DevSecOps Integral** | **TP13 – TP15** | **DAST** dinámico con OWASP ZAP, **Modelado de Amenazas** con Threagile, y **SAST** multilenguaje con Semgrep y freno de mano (*Andon Cord*). |
 
 ---
 
-## 3. Tecnologías utilizadas
+## 🛡️ TP15: Análisis Estático de Seguridad (SAST) con Semgrep
 
-* Git
-* GitHub
-* GitHub Actions
-* Docker
-* Docker Compose
-* Python
-* YAML
-* Threagile
-* Docker Hub
+El **TP15** complementa las etapas previas de seguridad (OWASP ZAP y Threagile) mediante la incorporación de **Static Application Security Testing (SAST)** automatizado en GitHub Actions. A diferencia de analizadores tradicionales, **Semgrep** funciona como un motor multilenguaje capaz de auditar todas las capas tecnológicas del proyecto en un único flujo de trabajo.
 
----
+### 📜 Capas Auditadas y Reglas Aplicadas
 
-## 4. Arquitectura modelada
-
-El modelo de amenazas representa los principales componentes utilizados por la Notes App y su infraestructura.
-
-Entre los activos técnicos modelados se encuentran:
-
-* Cliente web
-* Nginx
-* Backend
-* PostgreSQL
-* Prometheus
-* Node Exporter
-* cAdvisor
-* Grafana
-
-El archivo principal del modelo es:
-
-```text
-threagile.yaml
-```
-
-Este archivo describe los activos, relaciones y flujos relevantes de la arquitectura.
+| Capa Tecnológica | Archivos Auditados | Conjunto de Reglas (`--config`) | Riesgos y Vulnerabilidades Detectadas |
+|---|---|---|---|
+| **Backend Python** | `app/backend/app.py`, rutas API | `OWASP Top 10`, `p/python` | Inyección SQL, funciones peligrosas (`eval`), desinfección de entradas y configuración CORS. |
+| **Contenedores** | `Dockerfile` (frontend/backend) | `p/dockerfile` | Ejecución como usuario root, imágenes base vulnerables y manejo inseguro de capas. |
+| **Infraestructura (IaC)** | `guia-11/*.tf`, módulos | `p/terraform` | Reglas de Ingress permisivas (`0.0.0.0/0`), credenciales expuestas y almacenamiento inseguro. |
+| **Orquestación (K8s/Helm)** | `devops-tp12/chart`, manifiestos | `p/kubernetes`, `p/owasp-top-ten` | Ausencia de límites de recursos (`limits/requests`), Secrets en texto plano y permisos excesivos. |
 
 ---
 
-## 5. Modelo de amenazas
+## 🚨 Estrategia de Seguridad: Guardián Estricto (*Andon Cord*)
 
-Threagile permite representar la arquitectura desde una perspectiva de seguridad y analizar posibles riesgos asociados a los componentes y flujos de información.
+El pipeline implementa una evaluación en dos niveles para equilibrar la visibilidad de reportes con la protección del despliegue:
 
-El modelo fue construido y validado utilizando el archivo:
-
-```text
-threagile.yaml
-```
-
-Antes de integrarlo al pipeline se realizó una ejecución local para comprobar que el modelo fuera válido y que Threagile pudiera generar correctamente sus resultados.
-
-La ejecución local permitió obtener:
-
-* Reporte PDF
-* Diagrama de flujo de datos
-* Diagrama de activos
-* Información de riesgos
-* Estadísticas
-* Información de activos técnicos
+1. **Modo Informativo (Reportes e Históricos):** Los pasos de generación de reportes finalizan con `|| true`. Esto garantiza que los artefactos (`semgrep-results.json`, `semgrep.sarif`) y la tabla en `$GITHUB_STEP_SUMMARY` se publiquen en cada ejecución, sin importar los hallazgos.
+2. **Andon Cord (Freno de Mano DevSecOps):** El paso final ejecuta Semgrep con la instrucción `--severity=ERROR --error`. Ante cualquier vulnerabilidad crítica (por ejemplo, ejecución remota por tubería como `curl | bash`), el paso fuerza la finalización con `exit code 1`, interrumpiendo el flujo de integración antes del despliegue.
 
 ---
 
-## 6. Integración con GitHub Actions
-
-El análisis de amenazas fue integrado al pipeline existente mediante un nuevo job:
-
-```yaml
-threat-modeling:
-```
-
-El job utiliza la acción oficial:
-
-```yaml
-threagile/run-threagile-action@v1
-```
-
-y analiza:
-
-```yaml
-model-file: 'threagile.yaml'
-```
-
-Los resultados son almacenados mediante:
-
-```yaml
-actions/upload-artifact@v4
-```
-
-con el nombre:
-
-```text
-threagile-report
-```
-
-De esta manera, los resultados del análisis quedan disponibles como artefacto de GitHub Actions.
-
-La consigna del TP establece precisamente que el reporte generado debe ser descargado desde la sección **Artifacts** y utilizado como evidencia para la presentación.
+## ⚙️ Estructura del Workflow (`.github/workflows/semgrep.yml`)
+1. **Renderizado de Helm:** Genera el YAML estático (`helm template`) hacia `.semgrep-tmp/` para analizar plantillas de Kubernetes antes de aplicar los manifiestos.
+2. **Escaneo Multilenguaje:** Analiza el código fuente, la infraestructura y los contenedores.
+3. **Resumen de Auditoría:** Construye un cuadro en Markdown con el estado de cada capa en `$GITHUB_STEP_SUMMARY`.
+4. **Carga de Artefactos:** Publica la carpeta comprimida `semgrep-report` (`semgrep-results.json`).
+5. **Code Scanning (SARIF):** Carga los resultados en la pestaña **Security** de GitHub.
+6. **Guardia Andon Cord:** Aplica la verificación estricta de severidad para detener el pipeline si existen bloqueantes.
 
 ---
 
-## 7. Ejecución manual del pipeline
+## 💻 Ejecución y Auditoría en Entorno Local
 
-Además de los disparadores habituales del pipeline, se incorporó:
+Para verificar el código localmente antes de enviar los cambios al repositorio remoto:
 
-```yaml
-workflow_dispatch:
-```
+```bash
+# 1. Activar entorno virtual e instalar Semgrep
+source .venv/bin/activate
+python3 -m pip install semgrep
 
-Esto permite ejecutar manualmente el workflow desde la interfaz de GitHub Actions.
+# 2. Escaneo general informativo (excluyendo carpetas secundarias)
+semgrep scan --config=auto --exclude=.venv --exclude='**/.terraform/**' .
 
-Esta opción fue utilizada para validar la ejecución completa del pipeline después de integrar el análisis de amenazas.
-
----
-
-## 8. Secretos utilizados
-
-El pipeline utiliza secretos de GitHub para la autenticación con Docker Hub.
-
-Los secretos configurados en el repositorio son:
-
-```text
-DOCKERHUB_USERNAME
-DOCKERHUB_TOKEN
-```
-
-El login se realiza mediante:
-
-```yaml
-- name: Login a Docker Hub
-  uses: docker/login-action@v3
-  with:
-    username: ${{ secrets.DOCKERHUB_USERNAME }}
-    password: ${{ secrets.DOCKERHUB_TOKEN }}
-```
-
-Los valores de los secretos no se almacenan dentro del código fuente.
+# 3. Escaneo de validación estricta (Andon Cord local)
+semgrep scan --config=p/owasp-top-ten --severity=ERROR .
+📁 Entregables del TP15
+Workflow: .github/workflows/semgrep.yml
+Reporte de Auditoría: Artefacto semgrep-report (semgrep-results.json) adjunto al run exitoso.
+Evidencias: Captura del fallo controlado por Andon Cord (curl-pipe-shell), commit de mitigación y ejecuciones posteriores completamente en verde (✅).
 
 ---
-
-## 9. Validación del pipeline
-
-Durante la validación se realizaron las siguientes comprobaciones:
-
-1. Validación de la sintaxis YAML.
-2. Ejecución local de Threagile.
-3. Integración del job `threat-modeling`.
-4. Configuración de GitHub Actions.
-5. Configuración de los secretos requeridos.
-6. Ejecución del pipeline.
-7. Verificación de los jobs.
-8. Generación del artefacto `threagile-report`.
-
-La ejecución final del pipeline terminó correctamente, con los jobs en estado exitoso.
-
-El job:
-
-```text
-Threat Model Analysis
-```
-
-finalizó correctamente y generó el artefacto correspondiente.
-
----
-
-## 10. Artefacto generado
-
-GitHub Actions generó el artefacto:
-
-```text
-threagile-report
-```
-
-El artefacto contiene los resultados generados por Threagile:
-
-```text
-data-asset-diagram.png
-data-flow-diagram.png
-report.pdf
-risks.json
-risks.xlsx
-stats.json
-tags.xlsx
-technical-assets.json
-```
-
-El archivo comprimido utilizado como evidencia para la presentación es:
-
-```text
-threagile-report.zip
-```
-
-Este archivo se conserva fuera del repositorio como material de entrega de la presentación.
-
----
-
-## 11. Evidencias
-
-Como evidencia de la implementación se dispone de:
-
-* `threagile.yaml`
-* `.github/workflows/cicd.yml`
-* Ejecución exitosa de GitHub Actions
-* Job `Threat Model Analysis` en estado exitoso
-* Artefacto `threagile-report`
-* Reporte PDF generado por Threagile
-* Diagrama de flujo de datos
-* Diagrama de activos
-* Archivos de riesgos y estadísticas
-
----
-
-## 12. Flujo DevSecOps implementado
-
-El flujo final del trabajo puede resumirse de la siguiente manera:
-
-```text
-Código / Arquitectura
-        │
-        ▼
-   Git / GitHub
-        │
-        ▼
- GitHub Actions
-        │
-        ├── Lint
-        ├── Tests
-        ├── Build
-        ├── Docker
-        │
-        └── Threat Model Analysis
-                    │
-                    ▼
-               Threagile
-                    │
-                    ▼
-             Reportes de seguridad
-                    │
-                    ▼
-             Artifact: threagile-report
-```
-
-La integración permite que el análisis de amenazas forme parte del ciclo de desarrollo y no sea una actividad exclusivamente manual.
-
----
-
-## 13. Resultado final
-
-El TP14 permite incorporar una instancia de **modelado de amenazas automatizado** al proceso de desarrollo de la Notes App.
-
-La implementación final permite:
-
-* modelar la arquitectura;
-* analizar amenazas mediante Threagile;
-* validar el modelo;
-* ejecutar el análisis automáticamente;
-* generar reportes;
-* conservar los resultados como artefactos de GitHub Actions;
-* utilizar dichos resultados como evidencia del análisis de seguridad.
-
-De esta manera se completa la integración de una práctica de **Security by Design / DevSecOps** dentro del pipeline de la aplicación.
-
----
-
-## 14. Archivos principales del TP14
-
-```text
-trabajo-14/
-├── .github/
-│   └── workflows/
-│       └── cicd.yml
-├── threagile.yaml
-├── guia-06/
-├── guia-08/
-├── guia-09/
-├── guia-10/
-├── guia-11/
-├── guia-12/
-├── devops-TP06/
-├── devops-tp12/
-└── README.md
-```
-
-Los archivos temporales, reportes generados localmente y copias de respaldo utilizadas durante la resolución no forman parte del código fuente necesario para ejecutar el proyecto.
